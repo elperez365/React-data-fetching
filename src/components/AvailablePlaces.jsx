@@ -3,39 +3,29 @@ import Places from "./Places.jsx";
 import ErrorBox from "./Error.jsx";
 import { sortPlacesByDistance } from "../loc.js";
 import { fetchAvailablePlaces } from "../http.js";
+import { useFetch } from "../hooks/useFetch.jsx";
+
+async function fetchSortedPlaces() {
+  const places = await fetchAvailablePlaces();
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      const sortedPlaces = sortPlacesByDistance(places, latitude, longitude);
+      resolve(sortedPlaces);
+    }, reject);
+  });
+}
 
 export default function AvailablePlaces({ onSelectPlace }) {
-  const [availablePlaces, setAvailablePlaces] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [errorState, setError] = useState(null);
-
-  useEffect(() => {
-    async function fetchPlaces() {
-      setIsFetching(true);
-      try {
-        const places = await fetchAvailablePlaces();
-        navigator.geolocation.getCurrentPosition((position) => {
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-
-          const sortedPlaces = sortPlacesByDistance(
-            places,
-            latitude,
-            longitude
-          );
-          setAvailablePlaces(sortedPlaces);
-          setIsFetching(false);
-        });
-      } catch (error) {
-        setError({
-          message:
-            error.message || "Could not fetch places, please try again Later",
-        });
-        setIsFetching(false);
-      }
-    }
-    fetchPlaces();
-  }, []);
+  const {
+    data: availablePlaces,
+    setData: setAvailablePlaces,
+    loading: isFetching,
+    error: errorState,
+    setError,
+  } = useFetch(fetchSortedPlaces, []);
 
   if (errorState) {
     return (
