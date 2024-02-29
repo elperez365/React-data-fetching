@@ -77,7 +77,7 @@ function App() {
       } catch (error) {
         setUserPlaces(userPlaces);
         setErrorUpdatingPlaces({
-          message: error.message || "Failed to update user places.",
+          message: error.message || "Failed to delete selected place.",
         });
       }
 
